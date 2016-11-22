@@ -855,7 +855,8 @@ def read_html(io, match='.+', flavor=None, header=None, index_col=None,
         .. versionadded:: 0.19.0
 
     process_raw_data : bool, default True
-        If set to False, the full DOM of each <TD> is returned.
+        If set to False, the full DOM of each <TD> node is returned
+        as a parser object (bs4 or lxml).
 
     Returns
     -------
