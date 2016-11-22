@@ -186,11 +186,12 @@ class _HtmlFrameParser(object):
     functionality.
     """
 
-    def __init__(self, io, match, attrs, encoding):
+    def __init__(self, io, match, attrs, encoding, process_raw_data=True):
         self.io = io
         self.match = match
         self.attrs = attrs
         self.encoding = encoding
+        self.process_raw_data = process_raw_data
 
     def parse_tables(self):
         tables = self._parse_tables(self._build_doc(), self.match, self.attrs)
@@ -212,12 +213,19 @@ class _HtmlFrameParser(object):
             A callable that takes a row node as input and returns a list of the
             column node in that row. This must be defined by subclasses.
 
+        process_raw_data : boolean
+            If False, return full DOM as parser.tag objects.
+
         Returns
         -------
-        data : list of list of strings
+        data : list of list of strings or list of list of parser.tag objects
         """
-        data = [[_remove_whitespace(self._text_getter(col)) for col in
-                 self._parse_td(row)] for row in rows]
+        if self.process_raw_data:
+            data = [[_remove_whitespace(self._text_getter(col)) for col in
+                    self._parse_td(row)] for row in rows]
+        else:
+            data = [[col for col in
+                     self._parse_td(row)] for row in rows]
         return data
 
     def _text_getter(self, obj):
@@ -721,7 +729,7 @@ def _parse(flavor, io, match, attrs, encoding, **kwargs):
     retained = None
     for flav in flavor:
         parser = _parser_dispatch(flav)
-        p = parser(io, compiled_match, attrs, encoding)
+        p = parser(io, compiled_match, attrs, encoding, process_raw_data=kwargs['process_raw_data'])
 
         try:
             tables = p.parse_tables()
@@ -745,7 +753,7 @@ def read_html(io, match='.+', flavor=None, header=None, index_col=None,
               skiprows=None, attrs=None, parse_dates=False,
               tupleize_cols=False, thousands=',', encoding=None,
               decimal='.', converters=None, na_values=None,
-              keep_default_na=True):
+              keep_default_na=True, process_raw_data=True):
     r"""Read HTML tables into a ``list`` of ``DataFrame`` objects.
 
     Parameters
@@ -893,4 +901,4 @@ def read_html(io, match='.+', flavor=None, header=None, index_col=None,
                   parse_dates=parse_dates, tupleize_cols=tupleize_cols,
                   thousands=thousands, attrs=attrs, encoding=encoding,
                   decimal=decimal, converters=converters, na_values=na_values,
-                  keep_default_na=keep_default_na)
+                  keep_default_na=keep_default_na, process_raw_data = process_raw_data)
